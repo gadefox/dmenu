@@ -28,17 +28,17 @@
 enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
 
 struct item {
-	struct item *left;
+  struct item *left;
   struct item *right;
-	char *text;
+  char *text;
   char *value;
-	int out;
+  int out;
 };
 
 static char text[BUFSIZ] = "";
 static char *embed;
 static int bh, mw, mh;
-static int inputw = 0, promptw, passwd = 0;
+static int inputw = 0, promptw, sif = 0;
 static int lrpad; /* sum of left and right padding */
 static size_t cursor;
 static struct item *items = NULL;
@@ -208,7 +208,6 @@ drawmenu(void)
 	unsigned int curpos;
 	struct item *item;
 	int x = 0, y = 0, w;
-	char *censort;
 
 	drw_setscheme(drw, scheme[SchemeNorm]);
 	drw_rect(drw, 0, 0, mw, mh, 1, 1);
@@ -220,12 +219,13 @@ drawmenu(void)
 	/* draw input field */
 	w = (lines > 0 || !matches) ? mw - x : inputw;
 	drw_setscheme(drw, scheme[SchemeNorm]);
-	if (passwd) {
-	        censort = ecalloc(1, sizeof(text));
-		memset(censort, '.', strlen(text));
-		drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
-		free(censort);
-	} else drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
+	if (sif & 1) {
+	  char *censort = ecalloc(1, sizeof(text));
+	  memset(censort, '.', strlen(text));
+	  drw_text(drw, x, 0, w, bh, lrpad / 2, censort, 0);
+	  free(censort);
+	} else
+      drw_text(drw, x, 0, w, bh, lrpad / 2, text, 0);
 
 	curpos = TEXTW(text) - TEXTW(&text[cursor]);
 	if ((curpos += lrpad / 2 - 1) < w) {
@@ -736,7 +736,7 @@ readstdin(void)
 	size_t i, itemsiz = 0, linesiz = 0;
 	ssize_t len;
 
-    if (passwd) {
+    if (sif) {
      	inputw = lines = 0;
     	return;
   	}
@@ -916,7 +916,7 @@ setup(void)
 static void
 usage(void)
 {
-	die("usage: dmenu [-bfsvP] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	die("usage: dmenu [-bfisvP] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
 }
 
@@ -935,11 +935,13 @@ main(int argc, char *argv[])
 			topbar = 0;
 		else if (!strcmp(argv[i], "-f"))   /* grabs keyboard before reading stdin */
 			fast = 1;
+		else if (!strcmp(argv[i], "-i"))   /* ignore data from stdin */
+			sif = 2;
 		else if (!strcmp(argv[i], "-s")) { /* case-sensitive item matching */
 			fstrncmp = strncmp;
 			fstrstr = strstr;
   		} else if (!strcmp(argv[i], "-P"))   /* is the input a password */
-			passwd = 1;
+			sif = 1;
 		else if (i + 1 == argc)
 			usage();
 		/* these options take one argument */
