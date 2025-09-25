@@ -1,0 +1,15 @@
+#!/bin/rc
+
+if (~ $1 -e || ~ $1 1) {
+  app = `{ dmenu-path | dmenu -p 'Launch executable' }
+  ~ $app () && exit 0
+  exec $app
+}
+
+if (~ $1 -t || ~ $1 2) {
+  app = `{ dmenu-path | dmenu -p 'Launch terminal' }
+  ~ $app () && exit 0
+  exec kitty -1 -e $app
+}
+
+exit 1
