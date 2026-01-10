@@ -1,0 +1,12 @@
+#!/bin/sh
+
+cache="$XDG_CACHE_HOME/dmenu"
+[ ! -d "$cache" ] && mkdir -p "$cache"
+cache="$cache/run"
+
+IFS=:
+if stest -dqr -n "$cache" $PATH; then
+  stest -flx $PATH | sort -u | tee "$cache"
+else
+  cat "$cache"
+fi
